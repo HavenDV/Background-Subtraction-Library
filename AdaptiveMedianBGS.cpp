@@ -25,9 +25,9 @@ void AdaptiveMedianBGS::Initalize(const BgsParams& params)
     m_median.setTo( RgbPixel( BACKGROUND, BACKGROUND, BACKGROUND ) );
 }
 
-RgbImage* AdaptiveMedianBGS::Background()
+RgbImage AdaptiveMedianBGS::Background()
 {
-	return &m_median;
+	return m_median;
 }
 
 void    AdaptiveMedianBGS::InitModel(const RgbImage& data)

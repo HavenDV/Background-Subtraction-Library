@@ -92,9 +92,9 @@ void GrimsonGMM::Initalize(const BgsParams& param)
     m_background.create( m_params.Width(), m_params.Height() );
 }
 
-RgbImage* GrimsonGMM::Background()
+RgbImage GrimsonGMM::Background()
 {
-	return &m_background;
+	return m_background;
 }
 
 void GrimsonGMM::InitModel(const RgbImage& data)

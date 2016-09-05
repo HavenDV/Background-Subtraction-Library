@@ -79,7 +79,7 @@ public:
 									BwImage& low_threshold_mask, BwImage& high_threshold_mask);	
 	void Update(int frame_num, const RgbImage& data,  const BwImage& update_mask);
 
-	RgbImage* Background();
+	RgbImage Background();
 
 private:	
 	void SubtractPixel(int r, int c, const RgbPixel& pixel, 
