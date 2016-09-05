@@ -75,7 +75,7 @@ void ZivkovicAGMM::Initalize(const BgsParams& param)
 	// used modes per pixel
 	m_modes_per_pixel = new unsigned char[m_params.Size()];
 
-	m_background = cvCreateImage(cvSize(m_params.Width(), m_params.Height()), IPL_DEPTH_8U, 3);
+    m_background.create( m_params.Width(), m_params.Height() );
 }
 
 void ZivkovicAGMM::InitModel(const RgbImage& data)
@@ -397,13 +397,13 @@ void ZivkovicAGMM::Subtract(int frame_num, const RgbImage& data,
 		{
 			//update model+ background subtract
 			posPixel=(r*m_params.Width()+c)*m_params.MaxModes();
-			SubtractPixel(posPixel, data(r,c), pUsedModes, low_threshold, high_threshold);
-			low_threshold_mask(r,c) = low_threshold;
-			high_threshold_mask(r,c) = high_threshold;
+			SubtractPixel(posPixel, data.at< RgbPixel >(r,c), pUsedModes, low_threshold, high_threshold);
+			low_threshold_mask.at< uchar >(r,c) = low_threshold;
+			high_threshold_mask.at< uchar >(r,c) = high_threshold;
 
-			m_background(r,c,0) = (unsigned char)m_modes[posPixel].muR;
-			m_background(r,c,1) = (unsigned char)m_modes[posPixel].muG;
-			m_background(r,c,2) = (unsigned char)m_modes[posPixel].muB;
+			m_background.at< RgbPixel >( r,c )[0] = (unsigned char)m_modes[posPixel].muR;
+			m_background.at< RgbPixel >(r,c)[1] = (unsigned char)m_modes[posPixel].muG;
+			m_background.at< RgbPixel >(r,c)[2] = (unsigned char)m_modes[posPixel].muB;
 
 			pUsedModes++;
 		}

@@ -85,9 +85,8 @@ private:
 	void SubtractPixel(int r, int c, const RgbPixel& pixel, 
 											unsigned char& low_threshold, unsigned char& high_threshold);
 
-	AdaptiveMedianParams m_params;
-
-	RgbImage m_median;
+	AdaptiveMedianParams    m_params;
+	RgbImage                m_median;
 };
 
 };

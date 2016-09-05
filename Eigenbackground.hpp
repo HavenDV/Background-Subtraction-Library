@@ -91,10 +91,10 @@ private:
 
 	EigenbackgroundParams m_params;
 	
-	CvMat* m_pcaData;
-	CvMat* m_pcaAvg;
-	CvMat* m_eigenValues; 
-  CvMat* m_eigenVectors;
+    cv::Mat     m_pcaData;
+    cv::Mat     m_pcaAvg;
+	cv::Mat     m_eigenValues; 
+    cv::Mat     m_eigenVectors;
 
 	RgbImage m_background;
 };

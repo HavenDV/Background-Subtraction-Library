@@ -63,7 +63,8 @@ void WrenGA::Initalize(const BgsParams& param)
 		}
 	}
 
-	m_background = cvCreateImage(cvSize(m_params.Width(), m_params.Height()), IPL_DEPTH_8U, 3);
+	//m_background = cvCreateImage(cvSize(m_params.Width(), m_params.Height()), IPL_DEPTH_8U, 3);
+    m_background.create( m_params.Width(), m_params.Height() );
 }
 
 void WrenGA::InitModel(const RgbImage& data)
@@ -76,7 +77,7 @@ void WrenGA::InitModel(const RgbImage& data)
 		{
 			for(int ch = 0; ch < NUM_CHANNELS; ++ch)
 			{	
-				m_gaussian[pos].mu[ch] = data(r,c,ch);
+				m_gaussian[pos].mu[ch] = data.at< RgbPixel >(r,c)[ch];
 				m_gaussian[pos].var[ch] = m_variance;
 			}
 
@@ -94,11 +95,11 @@ void WrenGA::Update(int frame_num, const RgbImage& data,  const BwImage& update_
 		for(unsigned int c = 0; c < m_params.Width(); ++c)
 		{
 			// perform conditional updating only if we are passed the learning phase
-			if(update_mask(r,c) == BACKGROUND || frame_num < m_params.LearningFrames())
+			if(update_mask.at< uchar >(r,c) == BACKGROUND || frame_num < m_params.LearningFrames())
 			{
-				float dR = m_gaussian[pos].mu[0] - data(r,c,0);
-				float dG = m_gaussian[pos].mu[1] - data(r,c,1);
-				float dB = m_gaussian[pos].mu[2] - data(r,c,2);
+				float dR = m_gaussian[pos].mu[0] - data.at< RgbPixel >(r,c)[0];
+				float dG = m_gaussian[pos].mu[1] - data.at< RgbPixel >(r,c)[1];
+				float dB = m_gaussian[pos].mu[2] - data.at< RgbPixel >(r,c)[2];
 
 				float dist = (dR*dR + dG*dG + dB*dB);
 
@@ -109,9 +110,9 @@ void WrenGA::Update(int frame_num, const RgbImage& data,  const BwImage& update_
 				float sigmanew = m_gaussian[pos].var[0] + m_params.Alpha()*(dist-m_gaussian[pos].var[0]);
 				m_gaussian[pos].var[0] = sigmanew < 4 ? 4 : sigmanew > 5*m_variance ? 5*m_variance : sigmanew;
 
-				m_background(r, c, 0) = (unsigned char)(m_gaussian[pos].mu[0] + 0.5);
-				m_background(r, c, 1) = (unsigned char)(m_gaussian[pos].mu[1] + 0.5);
-				m_background(r, c, 2) = (unsigned char)(m_gaussian[pos].mu[2] + 0.5);
+				m_background.at< RgbPixel >(r, c)[0] = (unsigned char)(m_gaussian[pos].mu[0] + 0.5);
+				m_background.at< RgbPixel >(r, c)[1] = (unsigned char)(m_gaussian[pos].mu[1] + 0.5);
+				m_background.at< RgbPixel >(r, c)[2] = (unsigned char)(m_gaussian[pos].mu[2] + 0.5);
 			}
 
 			pos++;
@@ -166,9 +167,9 @@ void WrenGA::Subtract(int frame_num, const RgbImage& data,
 	{
 		for(unsigned int c = 0; c < m_params.Width(); ++c)
 		{
-			SubtractPixel(r, c, data(r,c), low_threshold, high_threshold);
-			low_threshold_mask(r,c) = low_threshold;
-			high_threshold_mask(r,c) = high_threshold;
+			SubtractPixel(r, c, data.at< RgbPixel >(r,c), low_threshold, high_threshold);
+			low_threshold_mask.at< uchar >(r,c) = low_threshold;
+			high_threshold_mask.at< uchar >(r,c) = high_threshold;
 		}
 	}
 }

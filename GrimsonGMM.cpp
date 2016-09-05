@@ -84,9 +84,12 @@ void GrimsonGMM::Initalize(const BgsParams& param)
 	m_modes = new GMM[m_params.Size()*m_params.MaxModes()];
 
 	// used modes per pixel
-	m_modes_per_pixel = cvCreateImage(cvSize(m_params.Width(), m_params.Height()), IPL_DEPTH_8U, 1);
+	//m_modes_per_pixel = cvCreateImage(cvSize(m_params.Width(), m_params.Height()), IPL_DEPTH_8U, 1);
 
-	m_background = cvCreateImage(cvSize(m_params.Width(), m_params.Height()), IPL_DEPTH_8U, 3);
+	//m_background = cvCreateImage(cvSize(m_params.Width(), m_params.Height()), IPL_DEPTH_8U, 3);
+
+    m_modes_per_pixel.create( m_params.Width(), m_params.Height() );
+    m_background.create( m_params.Width(), m_params.Height() );
 }
 
 RgbImage* GrimsonGMM::Background()
@@ -96,7 +99,8 @@ RgbImage* GrimsonGMM::Background()
 
 void GrimsonGMM::InitModel(const RgbImage& data)
 {
-	m_modes_per_pixel.Clear();
+	//m_modes_per_pixel.Clear();
+    m_modes_per_pixel.setTo( BACKGROUND );
 
 	for(unsigned int i = 0; i < m_params.Size()*m_params.MaxModes(); ++i)
 	{
@@ -246,9 +250,9 @@ void GrimsonGMM::SubtractPixel(long posPixel, const RgbPixel& pixel, unsigned ch
 
 		pos = posPixel + numModes-1;
 		
-		m_modes[pos].muR = pixel.ch[0];
-		m_modes[pos].muG = pixel.ch[1];
-		m_modes[pos].muB = pixel.ch[2];
+		m_modes[pos].muR = pixel[0];
+		m_modes[pos].muG = pixel[1];
+		m_modes[pos].muB = pixel[2];
 		m_modes[pos].variance = m_variance;
 		m_modes[pos].significants = 0;			// will be set below
 
@@ -319,14 +323,14 @@ void GrimsonGMM::Subtract(int frame_num, const RgbImage& data,
 			// update model + background subtract
 			posPixel=(r*m_params.Width()+c)*m_params.MaxModes();
 			
-			SubtractPixel(posPixel, data(r,c), m_modes_per_pixel(r,c), low_threshold, high_threshold);
+			SubtractPixel(posPixel, data.at< RgbPixel >(r,c), m_modes_per_pixel.at< uchar >(r,c), low_threshold, high_threshold);
 			
-			low_threshold_mask(r,c) = low_threshold;
-			high_threshold_mask(r,c) = high_threshold;
+			low_threshold_mask.at< uchar >(r,c) = low_threshold;
+			high_threshold_mask.at< uchar >(r,c) = high_threshold;
 
-			m_background(r,c,0) = (unsigned char)m_modes[posPixel].muR;
-			m_background(r,c,1) = (unsigned char)m_modes[posPixel].muG;
-			m_background(r,c,2) = (unsigned char)m_modes[posPixel].muB;
+			m_background.at< RgbPixel >(r,c)[0] = (unsigned char)m_modes[posPixel].muR;
+			m_background.at< RgbPixel >(r,c)[1] = (unsigned char)m_modes[posPixel].muG;
+			m_background.at< RgbPixel >(r,c)[2] = (unsigned char)m_modes[posPixel].muB;
 		}
 	}
 }
