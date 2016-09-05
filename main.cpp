@@ -29,7 +29,7 @@
 int     main( int argc, const char* argv[] )
 {
     // read data from AVI file
-    cv::VideoCapture readerAvi( "data/fountain.avi" );
+    cv::VideoCapture readerAvi( "examples/fountain.avi" );
     if( !readerAvi.isOpened() )
     {
         std::cerr << "Could not open AVI file." << std::endl;

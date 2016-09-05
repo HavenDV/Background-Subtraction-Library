@@ -69,7 +69,8 @@ void AdaptiveMedianBGS::SubtractPixel(int r, int c, const RgbPixel& pixel,
 																			unsigned char& low_threshold, unsigned char& high_threshold)
 {
 	// perform background subtraction
-	low_threshold = high_threshold = FOREGROUND;
+	low_threshold = FOREGROUND;
+    high_threshold = FOREGROUND;
 	
 	int diffR = abs(pixel[0] - m_median(r,c)[0]);
 	int diffG = abs(pixel[1] - m_median(r,c)[1]);
@@ -97,20 +98,20 @@ void AdaptiveMedianBGS::SubtractPixel(int r, int c, const RgbPixel& pixel,
 void AdaptiveMedianBGS::Subtract(int frame_num, const RgbImage& data, 
 																	BwImage& low_threshold_mask, BwImage& high_threshold_mask)
 {
-	unsigned char low_threshold, high_threshold;
+    //ADD CHECK FOR SOME SIZE AND SOME TYPE
+    //ADD CHECK FOR NON EMPTY
 
-	// update each pixel of the image
-	for(unsigned int r = 0; r < m_params.Height(); ++r)
-	{
-		for(unsigned int c = 0; c < m_params.Width(); ++c)
-		{	
-			// perform background subtraction
-			SubtractPixel(r, c, data(r,c), low_threshold, high_threshold);
+    // update each pixel of the image
+    data.forEach( [ & ]( auto && color, auto && position ) {
+        auto r = position[ 0 ];
+        auto c = position[ 1 ];
 
-			// setup silhouette mask
-            low_threshold_mask( r, c ) = low_threshold;
-			high_threshold_mask(r,c) = high_threshold;
-		}
-	}
+        unsigned char low_threshold, high_threshold;
+        SubtractPixel( r, c, color, low_threshold, high_threshold );
+
+        // setup silhouette mask
+        low_threshold_mask( r, c ) = low_threshold;
+        high_threshold_mask( r, c ) = high_threshold;
+    } );
 }
 
