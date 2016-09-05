@@ -20,8 +20,7 @@ using namespace Algorithms::BackgroundSubtraction;
 
 void AdaptiveMedianBGS::Initalize(const BgsParams& params)
 {
-	//m_params = static_cast< const AdaptiveMedianParams & >( param );
-    m_params = ( AdaptiveMedianParams & )params;
+	m_params = static_cast< const AdaptiveMedianParams & >( params );
     m_median.create( m_params.Width(), m_params.Height() );
     m_median.setTo( RgbPixel( BACKGROUND, BACKGROUND, BACKGROUND ) );
 }
@@ -34,14 +33,7 @@ RgbImage* AdaptiveMedianBGS::Background()
 void    AdaptiveMedianBGS::InitModel(const RgbImage& data)
 {
 	// initialize the background model
-    for (unsigned int r = 0; r < m_params.Height(); ++r)
-	{
-		for(unsigned int c = 0; c < m_params.Width(); ++c)
-		{
-			m_median(r,c) = data(r,c);
-		}
-	}
-    //m_median = data.clone();
+    m_median = data.clone();
 }
 
 void AdaptiveMedianBGS::Update(int frame_num, const RgbImage& data,  const BwImage& update_mask)
