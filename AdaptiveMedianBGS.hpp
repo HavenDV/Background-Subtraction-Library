@@ -40,6 +40,7 @@ Example:
 #ifndef _ADAPTIVE_MEDIAN_BGS_H_		
 #define _ADAPTIVE_MEDIAN_BGS_H_		
 
+#include <opencv2/video.hpp>
 #include "Bgs.hpp"
 
 namespace Algorithms
@@ -67,10 +68,10 @@ private:
 
 
 // --- Adaptive Median BGS algorithm ---
-class AdaptiveMedianBGS : public Bgs 
+class AdaptiveMedianBGS : public Bgs
 {
 public:
-	virtual ~AdaptiveMedianBGS() {}
+	~AdaptiveMedianBGS() {}
 
 	void Initalize(const BgsParams& param);
 
@@ -79,7 +80,7 @@ public:
 									BwImage& low_threshold_mask, BwImage& high_threshold_mask);	
 	void Update(int frame_num, const RgbImage& data,  const BwImage& update_mask);
 
-	RgbImage Background();
+    void    getBackgroundImage( cv::OutputArray backgroundImage ) const;
 
 private:	
 	void SubtractPixel(int r, int c, const RgbPixel& pixel, 

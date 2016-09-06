@@ -61,7 +61,7 @@ public:
 	virtual void Update(int frame_num, const RgbImage& data,  const BwImage& update_mask) = 0;
 
 	// Return the current background model.
-	virtual RgbImage Background() = 0;
+    virtual void    getBackgroundImage( cv::OutputArray backgroundImage ) const = 0;
 };
 
 };

@@ -11,23 +11,20 @@
 *
 ******************************************************************************/
 
-#include <iostream>
-#include <stdlib.h>
-#include <cmath>
 #include "AdaptiveMedianBGS.hpp"
 
 using namespace Algorithms::BackgroundSubtraction;
 
-void AdaptiveMedianBGS::Initalize(const BgsParams& params)
+void    AdaptiveMedianBGS::Initalize(const BgsParams& params)
 {
 	m_params = static_cast< const AdaptiveMedianParams & >( params );
-    m_median.create( m_params.Width(), m_params.Height() );
-    m_median.setTo( RgbPixel( BACKGROUND, BACKGROUND, BACKGROUND ) );
+    //m_median.create( m_params.Width(), m_params.Height() );
+    //m_median = BACKGROUND;
 }
 
-RgbImage AdaptiveMedianBGS::Background()
+void    AdaptiveMedianBGS::getBackgroundImage( cv::OutputArray backgroundImage ) const
 {
-	return m_median;
+    backgroundImage.assign( m_median );
 }
 
 void    AdaptiveMedianBGS::InitModel(const RgbImage& data)
@@ -38,50 +35,60 @@ void    AdaptiveMedianBGS::InitModel(const RgbImage& data)
 
 void AdaptiveMedianBGS::Update(int frame_num, const RgbImage& data,  const BwImage& update_mask)
 {
-	if((frame_num % m_params.SamplingRate() == 1) || (frame_num < m_params.LearningFrames()))
-	{
-		// update background model
-        for(unsigned int r = 0; r < m_params.Height(); ++r)
+    auto check1 = ( frame_num % m_params.SamplingRate() ) == 1;
+    auto check2 = frame_num < m_params.LearningFrames();
+    if( !check1 && !check2 )
+    {
+        return;
+    }
+
+	// update background model
+    data.forEach( [ & ]( auto && color, auto && position ) {
+        auto r = position[ 0 ];
+        auto c = position[ 1 ];
+
+        // perform conditional updating only if we are passed the learning phase
+        auto check1 = update_mask( r, c ) == BACKGROUND;
+        auto check2 = frame_num < m_params.LearningFrames();
+        if( !check1 && !check2 )
         {
-            for(unsigned int c = 0; c < m_params.Width(); ++c)
-			{
-				// perform conditional updating only if we are passed the learning phase
-				if(update_mask(r,c) == BACKGROUND || frame_num < m_params.LearningFrames())
-				{
-					for(int ch = 0; ch < NUM_CHANNELS; ++ch)
-					{
-						if(data(r,c)[ch] > m_median(r,c)[ch])
-						{
-							m_median(r,c)[ch]++;
-						}
-						else if(data( r, c )[ ch ] < m_median( r, c )[ ch ] )
-						{
-							m_median( r, c )[ ch ]--;
-						}
-					}
-				}
-			}
-		}
-	}
+            return;
+        }
+        
+        for( int ch = 0; ch < NUM_CHANNELS; ++ch )
+        {
+            if( data( r, c )[ ch ] > m_median( r, c )[ ch ] )
+            {
+                m_median( r, c )[ ch ]++;
+            }
+            else if( data( r, c )[ ch ] < m_median( r, c )[ ch ] )
+            {
+                m_median( r, c )[ ch ]--;
+            }
+         }
+    } );
 }
 
-void AdaptiveMedianBGS::SubtractPixel(int r, int c, const RgbPixel& pixel, 
-																			unsigned char& low_threshold, unsigned char& high_threshold)
+void    AdaptiveMedianBGS::SubtractPixel( int r, int c, const RgbPixel & pixel, 
+										  unsigned char & low_threshold, 
+                                          unsigned char&  high_threshold )
 {
 	// perform background subtraction
 	low_threshold = FOREGROUND;
     high_threshold = FOREGROUND;
 	
-	int diffR = abs(pixel[0] - m_median(r,c)[0]);
-	int diffG = abs(pixel[1] - m_median(r,c)[1]);
-	int diffB = abs(pixel[2] - m_median(r,c)[2]);
+	int diffR = cv::abs( pixel[ 0 ] - m_median( r,c )[ 0 ] );
+	int diffG = cv::abs( pixel[ 1 ] - m_median( r,c )[ 1 ] );
+	int diffB = cv::abs( pixel[ 2 ] - m_median( r,c )[ 2 ] );
 	
-	if(diffR <= m_params.LowThreshold() && diffG <= m_params.LowThreshold() &&  diffB <= m_params.LowThreshold())
+    auto low = m_params.LowThreshold();
+	if( diffR <= low && diffG <= low &&  diffB <= low )
 	{
 		low_threshold = BACKGROUND;
 	}
 
-	if(diffR <= m_params.HighThreshold() && diffG <= m_params.HighThreshold() &&  diffB <= m_params.HighThreshold())
+    auto high = m_params.HighThreshold();
+	if( diffR <= high && diffG <= high &&  diffB <= high )
 	{
 		high_threshold = BACKGROUND;
 	}
