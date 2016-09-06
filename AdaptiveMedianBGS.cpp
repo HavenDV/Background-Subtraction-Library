@@ -15,16 +15,19 @@
 
 using namespace Algorithms::BackgroundSubtraction;
 
-void    AdaptiveMedianBGS::Initalize(const BgsParams& params)
-{
-	m_params = static_cast< const AdaptiveMedianParams & >( params );
-    //m_median.create( m_params.Width(), m_params.Height() );
-    //m_median = BACKGROUND;
-}
+        AdaptiveMedianBGS::AdaptiveMedianBGS() : 
+            m_low_threshold( 40U ),
+            m_high_threshold( 80U ),
+            m_samplingRate( 7 ),
+            m_learning_frames( 30 )
+{}
+
+        AdaptiveMedianBGS::~AdaptiveMedianBGS()
+{}
 
 void    AdaptiveMedianBGS::getBackgroundImage( cv::OutputArray backgroundImage ) const
 {
-    backgroundImage.assign( m_median );
+    m_median.copyTo( backgroundImage );
 }
 
 void    AdaptiveMedianBGS::InitModel(const RgbImage& data)
@@ -35,8 +38,8 @@ void    AdaptiveMedianBGS::InitModel(const RgbImage& data)
 
 void AdaptiveMedianBGS::Update(int frame_num, const RgbImage& data,  const BwImage& update_mask)
 {
-    auto check1 = ( frame_num % m_params.SamplingRate() ) == 1;
-    auto check2 = frame_num < m_params.LearningFrames();
+    auto check1 = ( frame_num % m_samplingRate ) == 1;
+    auto check2 = frame_num < m_learning_frames;
     if( !check1 && !check2 )
     {
         return;
@@ -49,25 +52,28 @@ void AdaptiveMedianBGS::Update(int frame_num, const RgbImage& data,  const BwIma
 
         // perform conditional updating only if we are passed the learning phase
         auto check1 = update_mask( r, c ) == BACKGROUND;
-        auto check2 = frame_num < m_params.LearningFrames();
+        auto check2 = frame_num < m_learning_frames;
         if( !check1 && !check2 )
         {
             return;
         }
-        
-        for( int ch = 0; ch < NUM_CHANNELS; ++ch )
+
+        for( int ch = 0; ch < m_median.channels(); ++ch )
         {
             if( data( r, c )[ ch ] > m_median( r, c )[ ch ] )
             {
-                m_median( r, c )[ ch ]++;
+                ++m_median( r, c )[ ch ];
             }
             else if( data( r, c )[ ch ] < m_median( r, c )[ ch ] )
             {
-                m_median( r, c )[ ch ]--;
+                --m_median( r, c )[ ch ];
             }
          }
     } );
 }
+
+void    AdaptiveMedianBGS::apply( cv::InputArray image, cv::OutputArray fgmask, double learningRate )
+{}
 
 void    AdaptiveMedianBGS::SubtractPixel( int r, int c, const RgbPixel & pixel, 
 										  unsigned char & low_threshold, 
@@ -81,13 +87,13 @@ void    AdaptiveMedianBGS::SubtractPixel( int r, int c, const RgbPixel & pixel,
 	int diffG = cv::abs( pixel[ 1 ] - m_median( r,c )[ 1 ] );
 	int diffB = cv::abs( pixel[ 2 ] - m_median( r,c )[ 2 ] );
 	
-    auto low = m_params.LowThreshold();
+    auto low = m_low_threshold;
 	if( diffR <= low && diffG <= low &&  diffB <= low )
 	{
 		low_threshold = BACKGROUND;
 	}
 
-    auto high = m_params.HighThreshold();
+    auto high = m_high_threshold;
 	if( diffR <= high && diffG <= high &&  diffB <= high )
 	{
 		high_threshold = BACKGROUND;
@@ -107,6 +113,8 @@ void AdaptiveMedianBGS::Subtract(int frame_num, const RgbImage& data,
 {
     //ADD CHECK FOR SOME SIZE AND SOME TYPE
     //ADD CHECK FOR NON EMPTY
+    low_threshold_mask.create( data.size() );
+    high_threshold_mask.create( data.size() );
 
     // update each pixel of the image
     data.forEach( [ & ]( auto && color, auto && position ) {
@@ -122,3 +130,12 @@ void AdaptiveMedianBGS::Subtract(int frame_num, const RgbImage& data,
     } );
 }
 
+cv::Ptr< AdaptiveMedianBGS > Algorithms::BackgroundSubtraction::createAdaptiveMedianBGS( unsigned char low_threshold, unsigned char high_threshold, int samplingRate, int learning_frames )
+{
+    cv::Ptr< AdaptiveMedianBGS > bgs( new AdaptiveMedianBGS() );
+    bgs->setLowThreshold( low_threshold );
+    bgs->setHighThreshold( high_threshold );
+    bgs->setSamplingRate( samplingRate );
+    bgs->setLearningFrames( learning_frames );
+    return bgs;
+}

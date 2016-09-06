@@ -91,7 +91,7 @@ void PratiMediodBGS::Update(int frame_num, const RgbImage& data,  const BwImage&
 						for(unsigned int s = 0; s < m_median_buffer[i].pixels.size(); ++s)
 						{
 							int maxDist = 0;
-							for(int ch = 0; ch < NUM_CHANNELS; ++ch)
+							for(int ch = 0; ch < 3; ++ch) //FIX as m_median_buffer.channels()
 							{
 								int tempDist = abs(m_median_buffer[i].pixels.at(oldPos)(ch) 
 																		- m_median_buffer[i].pixels.at(s)(ch));
@@ -145,7 +145,7 @@ void PratiMediodBGS::UpdateMediod(int r, int c, const RgbImage& new_frame, int& 
 	for(unsigned int s = 0; s < m_median_buffer[i].dist.size(); ++s)
 	{
 		int maxDist = 0;
-		for(int ch = 0; ch < NUM_CHANNELS; ++ch)
+		for(int ch = 0; ch < 3; ++ch) //FIX as .channels()
 		{
 			int tempDist = abs(m_median_buffer[i].pixels.at(s)(ch) - new_frame.at< RgbPixel >(r,c)[ch]);
 			if(tempDist > maxDist)
@@ -220,7 +220,7 @@ void PratiMediodBGS::CalculateMasks(int r, int c, const RgbPixel& pixel)
 
 	// calculate l-inf distance between current value and median value
 	unsigned char dist = 0;
-	for(int ch = 0; ch < NUM_CHANNELS; ++ch)
+	for(int ch = 0; ch < 3; ++ch) //FIX as .channels()
 	{
 		int tempDist = abs(pixel(ch) - m_median_buffer[pos].median(ch));
 		if(tempDist > dist)

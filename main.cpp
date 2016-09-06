@@ -29,41 +29,24 @@
 int     main( int argc, const char* argv[] )
 {
     // read data from AVI file
-    cv::VideoCapture readerAvi( "examples/fountain.avi" );
-    if( !readerAvi.isOpened() )
+    cv::VideoCapture reader( "examples/fountain.avi" );
+    if( !reader.isOpened() )
     {
         std::cerr << "Could not open AVI file." << std::endl;
         return 0;
     }
 
     // retrieve information about AVI file
-    int width = static_cast< int >( readerAvi.get( cv::CAP_PROP_FRAME_WIDTH ) );
-    int height = static_cast< int >( readerAvi.get( cv::CAP_PROP_FRAME_HEIGHT ) );
-    double fps = readerAvi.get( cv::CAP_PROP_FPS );
-    unsigned int num_frames = static_cast< unsigned int >( readerAvi.get( cv::CAP_PROP_FRAME_COUNT ) );
-
-    // setup marks to hold results of low and high thresholding
-    BwImage low_threshold_mask( height, width );
-    //low_threshold_mask.create( width, height );
-    BwImage high_threshold_mask( height, width );
-   // high_threshold_mask.create( width, height );
+    int width = static_cast< int >( reader.get( cv::CAP_PROP_FRAME_WIDTH ) );
+    int height = static_cast< int >( reader.get( cv::CAP_PROP_FRAME_HEIGHT ) );
+    double fps = reader.get( cv::CAP_PROP_FPS );
+    unsigned int num_frames = static_cast< unsigned int >( reader.get( cv::CAP_PROP_FRAME_COUNT ) );
 
     // setup AVI writers:
-    cv::VideoWriter writerAvi;
-    writerAvi.open( "output/results.avi", -1, fps, cv::Size( width, height ), false );
+    cv::VideoWriter writer( "output/results.avi", -1, fps, cv::Size( width, height ), false );
 
     // setup background subtraction algorithm
-    ///*
-    Algorithms::BackgroundSubtraction::AdaptiveMedianParams params;
-    params.SetFrameSize(width, height);
-    params.LowThreshold() = 40;
-    params.HighThreshold() = 2*params.LowThreshold();	// Note: high threshold is used by post-processing
-    params.SamplingRate() = 7;
-    params.LearningFrames() = 30;
-
-    Algorithms::BackgroundSubtraction::AdaptiveMedianBGS bgs;
-    bgs.Initalize(params);
-    //*/
+    auto bgs = Algorithms::BackgroundSubtraction::createAdaptiveMedianBGS();
 
     /*
     Algorithms::BackgroundSubtraction::GrimsonParams params;
@@ -150,7 +133,7 @@ int     main( int argc, const char* argv[] )
         }
 
         // grad next frame from input video stream
-        readerAvi >> frame_data;
+        reader >> frame_data;
         if( frame_data.empty() )
         {
             std::cerr << "Could not grab AVI frame." << std::endl;
@@ -160,17 +143,21 @@ int     main( int argc, const char* argv[] )
         // initialize background model to first frame of video stream
         if( i == 0 )
         {
-            bgs.InitModel( frame_data );
+            bgs->InitModel( frame_data );
         }
 
+        // setup marks to hold results of low and high thresholding
+        BwImage low_threshold_mask;
+        BwImage high_threshold_mask;
+
         // perform background subtraction
-        bgs.Subtract( i, frame_data, low_threshold_mask, high_threshold_mask );
+        bgs->Subtract( i, frame_data, low_threshold_mask, high_threshold_mask );
 
         // save results
-        writerAvi.write( low_threshold_mask );
-        low_threshold_mask = 0;
+        writer.write( low_threshold_mask );
+        //low_threshold_mask = 0;
         // update background subtraction
-        bgs.Update( i, frame_data, low_threshold_mask );
+        bgs->Update( i, frame_data, low_threshold_mask );
     }
 
     return 0;

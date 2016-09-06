@@ -47,7 +47,7 @@ void MeanBGS::InitModel(const RgbImage& data)
 	{
 		for(unsigned int c = 0; c < m_params.Width(); ++c)
 		{
-			for(int ch = 0; ch < NUM_CHANNELS; ++ch)
+			for(int ch = 0; ch < m_mean.channels(); ++ch)
 			{
 				m_mean.at< RgbPixelFloat >(r,c )[ ch ] = (float)data.at< RgbPixelFloat >(r,c)[ch];
 			}
@@ -67,7 +67,7 @@ void MeanBGS::Update(int frame_num, const RgbImage& data,  const BwImage& update
 			{
 				// update B/G model
 				float mean;
-				for(int ch = 0; ch < NUM_CHANNELS; ++ch)
+				for(int ch = 0; ch < m_mean.channels(); ++ch)
 				{
 					mean = m_params.Alpha() * m_mean.at< RgbPixelFloat >( r, c )[ ch ] + (1.0f-m_params.Alpha()) * data.at< RgbPixel >( r, c )[ ch ];
                     m_mean.at< RgbPixelFloat >( r, c )[ ch ] = mean;
@@ -84,7 +84,7 @@ void MeanBGS::SubtractPixel(int r, int c, const RgbPixel& pixel,
 {
 	// calculate distance to sample point
 	float dist = 0;
-	for(int ch = 0; ch < NUM_CHANNELS; ++ch)
+	for(int ch = 0; ch < m_mean.channels(); ++ch)
 	{
 		dist += (pixel(ch)-m_mean.at< RgbPixelFloat >( r, c )[ ch ] )*(pixel(ch)-m_mean.at< RgbPixelFloat >( r, c )[ ch ] );
 	}

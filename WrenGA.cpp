@@ -56,7 +56,7 @@ void WrenGA::Initalize(const BgsParams& param)
 	m_gaussian = new GAUSSIAN[m_params.Size()];
 	for(unsigned int i = 0; i < m_params.Size(); ++i)
 	{
-		for(int ch = 0; ch < NUM_CHANNELS; ++ch)
+		for(int ch = 0; ch < 3; ++ch) // FIX as .channels()
 		{
 			m_gaussian[i].mu[ch] = 0;
 			m_gaussian[i].var[ch] = 0;
@@ -75,7 +75,7 @@ void WrenGA::InitModel(const RgbImage& data)
 	{
 		for(unsigned int c = 0; c < m_params.Width(); ++c)
 		{
-			for(int ch = 0; ch < NUM_CHANNELS; ++ch)
+			for(int ch = 0; ch < 3; ++ch) //FIX as .channels()
 			{	
 				m_gaussian[pos].mu[ch] = data.at< RgbPixel >(r,c)[ch];
 				m_gaussian[pos].var[ch] = m_variance;
@@ -127,11 +127,11 @@ void WrenGA::SubtractPixel(int r, int c, const RgbPixel& pixel,
 	unsigned int pos = r*m_params.Width()+c;
 
 	// calculate distance between model and pixel
-	float mu[NUM_CHANNELS];
+	float mu[3];//FIX as .channels()
 	float var[1];
-	float delta[NUM_CHANNELS];
+	float delta[3];//FIX as .channels()
 	float dist = 0;
-	for(int ch = 0; ch < NUM_CHANNELS; ++ch)
+	for(int ch = 0; ch < 3; ++ch)//FIX as .channels()
 	{
 		mu[ch] = m_gaussian[pos].mu[ch];
 		var[0] = m_gaussian[pos].var[0];

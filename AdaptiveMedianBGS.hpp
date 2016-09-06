@@ -41,54 +41,55 @@ Example:
 #define _ADAPTIVE_MEDIAN_BGS_H_		
 
 #include <opencv2/video.hpp>
-#include "Bgs.hpp"
+#include "Image.hpp"
 
 namespace Algorithms
 {
 namespace BackgroundSubtraction
 {
 
-// --- Parameters used by the Adaptive Median BGS algorithm ---
-class AdaptiveMedianParams : public BgsParams
-{
-public:
-	unsigned char &LowThreshold() { return m_low_threshold; }
-	unsigned char &HighThreshold() { return m_high_threshold; }
-
-	int &SamplingRate() { return m_samplingRate; }
-	int &LearningFrames() { return m_learning_frames; }
-
-private:
-	unsigned char m_low_threshold;
-	unsigned char m_high_threshold;
-
-	int m_samplingRate;
-	int m_learning_frames;
-};
-
-
 // --- Adaptive Median BGS algorithm ---
-class AdaptiveMedianBGS : public Bgs
+class AdaptiveMedianBGS : public cv::BackgroundSubtractor
 {
 public:
-	~AdaptiveMedianBGS() {}
+    AdaptiveMedianBGS();
+    ~AdaptiveMedianBGS();
 
-	void Initalize(const BgsParams& param);
+    void    setLowThreshold( unsigned char low_threshold ) { m_low_threshold = low_threshold; }
+    void    setHighThreshold( unsigned char high_threshold ) { m_high_threshold = high_threshold; }
+    void    setSamplingRate( int samplingRate ) { m_samplingRate = samplingRate; }
+    void    setLearningFrames( int learning_frames ) { m_learning_frames = learning_frames; }
 
-	void InitModel(const RgbImage& data);
-	void Subtract(int frame_num, const RgbImage& data,  
+    unsigned char   getLowThreshold() const { return m_low_threshold; }
+    unsigned char   getHighThreshold() const { return m_high_threshold; }
+    int             getSamplingRate() const { return m_samplingRate; }
+    int             getLearningFrames() const { return m_learning_frames; }
+
+	void    InitModel(const RgbImage& data);
+	void    Subtract(int frame_num, const RgbImage& data,  
 									BwImage& low_threshold_mask, BwImage& high_threshold_mask);	
-	void Update(int frame_num, const RgbImage& data,  const BwImage& update_mask);
+	void    Update(int frame_num, const RgbImage& data,  const BwImage& update_mask);
+
+    void    apply( cv::InputArray image, cv::OutputArray fgmask, double learningRate = -1 );
 
     void    getBackgroundImage( cv::OutputArray backgroundImage ) const;
 
 private:	
-	void SubtractPixel(int r, int c, const RgbPixel& pixel, 
-											unsigned char& low_threshold, unsigned char& high_threshold);
+	void    SubtractPixel( int r, int c, const RgbPixel & pixel, 
+                           unsigned char & low_threshold, unsigned char & high_threshold );
 
-	AdaptiveMedianParams    m_params;
-	RgbImage                m_median;
+    unsigned char   m_low_threshold;
+    unsigned char   m_high_threshold;
+    int             m_samplingRate;
+    int             m_learning_frames;
+	RgbImage        m_median;
+
 };
+
+//Note: high threshold is used by post - processing
+cv::Ptr< AdaptiveMedianBGS >    createAdaptiveMedianBGS( 
+    unsigned char low_threshold = 40U, unsigned char high_threshold = 80U,
+    int samplingRate = 7, int learning_frames = 30 );
 
 };
 };

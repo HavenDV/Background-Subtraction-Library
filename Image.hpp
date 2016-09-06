@@ -26,7 +26,8 @@ using ImageIterator = cv::MatIterator_< T >;
 
 // --- Constants --------------------------------------------------------------
 
-const unsigned char NUM_CHANNELS = 3;
+const unsigned char BACKGROUND = 0;
+const unsigned char FOREGROUND = 255;
 
 // --- Pixel Types ------------------------------------------------------------
 

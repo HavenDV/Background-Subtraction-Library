@@ -79,8 +79,8 @@ class WrenGA : public Bgs
 private:	
 	struct GAUSSIAN
 	{
-		float mu[NUM_CHANNELS];
-		float var[NUM_CHANNELS];
+		float mu[ 3 ];
+		float var[ 3 ];
 	};
 
 public:
