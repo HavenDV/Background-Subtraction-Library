@@ -2,7 +2,7 @@
 *
 * AdaptiveMedianBGS.cpp
 *
-* Purpose: Implementation of the simple adaptive median background 
+* Purpose: Implementation of the simple adaptive median background
 *		  		 subtraction algorithm described in:
 *	  			 "Segmentation and tracking of piglets in images"
 * 						by McFarlane and Schofield
@@ -15,15 +15,15 @@
 
 using namespace Algorithms::BackgroundSubtraction;
 
-        AdaptiveMedianBGS::AdaptiveMedianBGS() : 
-            m_i( 0 ),
-            m_low_threshold( 40U ),
-            m_high_threshold( 80U ),
-            m_samplingRate( 7 ),
-            m_learning_frames( 30 )
+AdaptiveMedianBGS::AdaptiveMedianBGS() :
+    m_i( 0 ),
+    m_low_threshold( 40U ),
+    m_high_threshold( 80U ),
+    m_samplingRate( 7 ),
+    m_learning_frames( 30 )
 {}
 
-        AdaptiveMedianBGS::~AdaptiveMedianBGS()
+AdaptiveMedianBGS::~AdaptiveMedianBGS()
 {}
 
 void    AdaptiveMedianBGS::getBackgroundImage( cv::OutputArray backgroundImage ) const
@@ -31,13 +31,13 @@ void    AdaptiveMedianBGS::getBackgroundImage( cv::OutputArray backgroundImage )
     m_median.copyTo( backgroundImage );
 }
 
-void    AdaptiveMedianBGS::InitModel(const RgbImage& data)
+void    AdaptiveMedianBGS::InitModel( const RgbImage& data )
 {
-	// initialize the background model
+    // initialize the background model
     m_median = data.clone();
 }
 
-void AdaptiveMedianBGS::Update(int frame_num, const RgbImage& data,  const BwImage& update_mask)
+void AdaptiveMedianBGS::Update( int frame_num, const RgbImage& data, const BwImage& update_mask )
 {
     auto check1 = ( frame_num % m_samplingRate ) == 1;
     auto check2 = frame_num < m_learning_frames;
@@ -46,7 +46,7 @@ void AdaptiveMedianBGS::Update(int frame_num, const RgbImage& data,  const BwIma
         return;
     }
 
-	// update background model
+    // update background model
     data.forEach( [ & ]( auto && color, auto && position ) {
         auto r = position[ 0 ];
         auto c = position[ 1 ];
@@ -69,7 +69,7 @@ void AdaptiveMedianBGS::Update(int frame_num, const RgbImage& data,  const BwIma
             {
                 --m_median( r, c )[ ch ];
             }
-         }
+        }
     } );
 }
 
@@ -95,29 +95,29 @@ void    AdaptiveMedianBGS::apply( cv::InputArray image, cv::OutputArray fgmask, 
     ++m_i;
 }
 
-void    AdaptiveMedianBGS::SubtractPixel( int r, int c, const RgbPixel & pixel, 
-										  unsigned char & low_threshold, 
+void    AdaptiveMedianBGS::SubtractPixel( int r, int c, const RgbPixel & pixel,
+                                          unsigned char & low_threshold,
                                           unsigned char &  high_threshold )
 {
-	// perform background subtraction
-	low_threshold = FOREGROUND;
+    // perform background subtraction
+    low_threshold = FOREGROUND;
     high_threshold = FOREGROUND;
-	
-	int diffR = cv::abs( pixel[ 0 ] - m_median( r,c )[ 0 ] );
-	int diffG = cv::abs( pixel[ 1 ] - m_median( r,c )[ 1 ] );
-	int diffB = cv::abs( pixel[ 2 ] - m_median( r,c )[ 2 ] );
-	
+
+    int diffR = cv::abs( pixel[ 0 ] - m_median( r, c )[ 0 ] );
+    int diffG = cv::abs( pixel[ 1 ] - m_median( r, c )[ 1 ] );
+    int diffB = cv::abs( pixel[ 2 ] - m_median( r, c )[ 2 ] );
+
     auto low = m_low_threshold;
-	if( diffR <= low && diffG <= low &&  diffB <= low )
-	{
-		low_threshold = BACKGROUND;
-	}
+    if( diffR <= low && diffG <= low &&  diffB <= low )
+    {
+        low_threshold = BACKGROUND;
+    }
 
     auto high = m_high_threshold;
-	if( diffR <= high && diffG <= high &&  diffB <= high )
-	{
-		high_threshold = BACKGROUND;
-	}
+    if( diffR <= high && diffG <= high &&  diffB <= high )
+    {
+        high_threshold = BACKGROUND;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -128,8 +128,8 @@ void    AdaptiveMedianBGS::SubtractPixel( int r, int c, const RgbPixel & pixel,
 //					(the memory should already be reserved) 
 //					values: 255-foreground, 0-background
 ///////////////////////////////////////////////////////////////////////////////
-void AdaptiveMedianBGS::Subtract(int frame_num, const RgbImage& data, 
-																	BwImage& low_threshold_mask, BwImage& high_threshold_mask)
+void AdaptiveMedianBGS::Subtract( int frame_num, const RgbImage& data,
+                                  BwImage& low_threshold_mask, BwImage& high_threshold_mask )
 {
     //ADD CHECK FOR SOME SIZE AND SOME TYPE
     //ADD CHECK FOR NON EMPTY
