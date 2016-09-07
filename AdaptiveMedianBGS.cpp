@@ -16,6 +16,7 @@
 using namespace Algorithms::BackgroundSubtraction;
 
         AdaptiveMedianBGS::AdaptiveMedianBGS() : 
+            m_i( 0 ),
             m_low_threshold( 40U ),
             m_high_threshold( 80U ),
             m_samplingRate( 7 ),
@@ -73,11 +74,30 @@ void AdaptiveMedianBGS::Update(int frame_num, const RgbImage& data,  const BwIma
 }
 
 void    AdaptiveMedianBGS::apply( cv::InputArray image, cv::OutputArray fgmask, double learningRate )
-{}
+{
+    cv::Mat frame_data = image.getMat();
+    if( m_i == 0 )
+    {
+        // initialize background model to first frame of video stream
+        InitModel( frame_data );
+    }
+
+    BwImage low_threshold_mask;
+    BwImage high_threshold_mask;
+
+    Subtract( m_i, frame_data, low_threshold_mask, high_threshold_mask );
+
+    // update background subtraction
+    Update( m_i, frame_data, low_threshold_mask );
+
+    low_threshold_mask.copyTo( fgmask );
+
+    ++m_i;
+}
 
 void    AdaptiveMedianBGS::SubtractPixel( int r, int c, const RgbPixel & pixel, 
 										  unsigned char & low_threshold, 
-                                          unsigned char&  high_threshold )
+                                          unsigned char &  high_threshold )
 {
 	// perform background subtraction
 	low_threshold = FOREGROUND;

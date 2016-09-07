@@ -42,7 +42,7 @@ int     main( int argc, const char* argv[] )
     double fps = reader.get( cv::CAP_PROP_FPS );
     unsigned int num_frames = static_cast< unsigned int >( reader.get( cv::CAP_PROP_FRAME_COUNT ) );
 
-    // setup AVI writers:
+    // setup writer:
     cv::VideoWriter writer( "output/results.avi", -1, fps, cv::Size( width, height ), false );
 
     // setup background subtraction algorithm
@@ -122,7 +122,6 @@ int     main( int argc, const char* argv[] )
     //*/
 
     // perform background subtraction of each frame
-
     // setup buffer to hold individual frames from video stream
     RgbImage frame_data;
     for( unsigned int i = 0; i < num_frames - 1; ++i )
@@ -140,24 +139,14 @@ int     main( int argc, const char* argv[] )
             return 0;
         }
 
-        // initialize background model to first frame of video stream
-        if( i == 0 )
-        {
-            bgs->InitModel( frame_data );
-        }
-
-        // setup marks to hold results of low and high thresholding
+        // setup marks to hold results of low thresholding
         BwImage low_threshold_mask;
-        BwImage high_threshold_mask;
 
         // perform background subtraction
-        bgs->Subtract( i, frame_data, low_threshold_mask, high_threshold_mask );
+        bgs->apply( frame_data, low_threshold_mask );
 
         // save results
         writer.write( low_threshold_mask );
-        //low_threshold_mask = 0;
-        // update background subtraction
-        bgs->Update( i, frame_data, low_threshold_mask );
     }
 
     return 0;
